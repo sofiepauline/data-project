@@ -15,12 +15,11 @@ Linje_20_2019<- Linje_20_2019%>%
 colnames(Linje_20_2019)<-c("Month", "Date", "Passanger")
 Linje_20_2019$Passanger<-as.numeric(Linje_20_2019$Passanger)
 
-Linje20<- Linje_20_2019 %>%
+Linje_20.2019<- Linje_20_2019 %>%
   group_by(Month,Date)%>%
-  tally(Passanger) %>%
-  arrange(Linje_20.2019,as.numeric(Linje_20.2019$Date))
+  tally(Passanger) 
 
-colnames(Linje20)<-c("Month","Date","Passengers")
+colnames(Linje_20.2019)<-c("Month","Date","Passengers")
   
 
 
@@ -34,10 +33,9 @@ Linje_33_2019<- Linje_33_2019%>%
 colnames(Linje_33_2019)<- c("Month", "Date", "Passanger")
 Linje_33_2019$Passanger<-as.numeric(Linje_33_2019$Passanger)
 
-Linje33<- Linje_33_2019 %>%
+Linje_33.2019<- Linje_33_2019 %>%
   group_by(Month,Date)%>%
-  tally(Passanger) %>%
-  arrange(Linje_33.2019,as.numeric(Linje_33.2019$Date))
+  tally(Passanger) 
 
 colnames(Linje_33.2019)<-c("Month","Date","Passengers")
 
@@ -74,22 +72,23 @@ Linje_24_2019<- Linje_24_2019%>%
   select("Brukte filtre:\nÅr er 2019\nLinje er 24", "...2", "...5")%>%
   slice(-c(1:2))
 
-names(Linje_24_2019)
 
 colnames(Linje_24_2019)<- c("Month", "Date", "Passanger")
 Linje_24_2019$Passanger<-as.numeric(Linje_24_2019$Passanger)
 
-Linje24<- Linje_24_2019 %>%
+Linje_24.2019<- Linje_24_2019 %>%
   group_by(Month,Date)%>%
-  tally(Passanger)%>%
-  arrange(Linje_24_2019,as.numeric(Linje_24.2019$Date))
+  tally(Passanger)
 
 colnames(Linje24)<-c("Month","Date","Passengers")
 
 
 
-linje33<-arrange(Linje_33.2019,as.numeric(Linje_33.2019$Date))
-linje34<-arrange(Linje_34.2019,as.numeric(Linje_34.2019$Date))
+allelinjer<- rbind(linje20,linje24,linje33,linje34)%>%
+  select("Month","Date","Passengers")%>%
+  arrange(allelinjer,as.numeric(allelinjer$Date))
+  
 
-allelinjer<- rbind(linje20,linje24,linje33,linje34)
+
+  
 
