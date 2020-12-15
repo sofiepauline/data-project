@@ -1,0 +1,524 @@
+<center>
+---
+title: "The effect weather has on traffic in Tromsø"
+author: "Andreas Knutsen, Herman Jakob Haugaa and Sofie Pauline Rise"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output: html_document
+
+
+
+---
+
+
+<style>
+body {
+  color: "Black";
+  font-family: Calibri;
+  background-color: #F2F2F2;
+  
+}
+body .main-container {
+        max-width: 720px;
+    }
+
+</style>
+
+
+
+
+
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readxl)
+library(tidyverse)
+library(ggplot2)
+library(lubridate)
+library(dygraphs)
+library(xts) 
+library(dplyr)
+
+
+
+
+```
+
+
+
+## Introduction
+
+##### What we will try to find out in this rapport is if the change in weather has an effect on peoples transportation chooise.
+##### The reason we would like to analyse this it to see if todays bus system is ineffectiv. We use the weather forecast to see if the bus company in Tromsø should reduce or add more busses depending on the weather forecast for each day. 
+
+##### We will start with looking at each transportation options and then see if there are any correlation between temperature and the means of transportation and then precipitations. 
+
+
+##### Info
+###### To get more info on the graphs you can select different options at the top right corner of the graphs. Here you can compare data on hover, or more exact read the x and y values. 
+###### In some of the graphs there are some dips. The dips are on sundays and comes because people travel less by bus/bike/car on this day of the week.
+
+
+```{r, include=FALSE, error=FALSE}
+setwd("/home/sri041@ad.uit.no/BED-2056/data-project")
+
+
+#car trafic data
+
+trafikkdata<- read_excel("trafikkdata.xlsx")
+
+trafikkdata<-trafikkdata%>%
+  filter(Lane=="Totalt")%>%
+  select("Date","Passanger_cars")
+
+trafikkdata$Passanger_cars<-as.numeric(trafikkdata$Passanger_cars)
+
+
+trafikkdata<- trafikkdata %>%
+  mutate(dates2=ymd(Date),month=month(dates2),day=day(dates2))
+
+
+trafikkdata<-trafikkdata%>%
+  select( "month","day","Passanger_cars")%>%
+  drop_na()
+
+trafikkdata<-trafikkdata[-c(361), ]
+
+#Had to use drop_na to remove NA in the dataframe between 08.06-10.06 and 25.8 in this data frame, and cut 3.12 from weatherdata
+
+#weather data
+weatherdata<-read_excel("weatherdata.xlsx")
+
+weatherdata<-weatherdata[-c(159,160,161,237,365),]
+
+
+
+#bicycledata
+
+bicycledata<- read_excel("bicycledata.xlsx")
+
+bicycledata<-bicycledata%>%
+  filter(Felt=="Totalt")%>%
+  select("Dato","Volum")
+
+
+bicycledata<- bicycledata %>%
+  mutate(dates2=ymd(Dato),month=month(dates2),day=day(dates2))
+
+bicycledata<- bicycledata[-c(159,160,161,237,365),]
+
+bicycledata<- bicycledata%>%
+  select("month","day","Volum")
+
+
+##linje 20
+
+Linje_20_2019 <- read_excel("Linje 20 - 2019.xlsx")
+
+Linje_20_2019<- Linje_20_2019%>%
+  select("Brukte filtre:\nÅr er 2019\nLinje er 20", "...2", "...5")%>%
+  slice(-c(1:2))
+
+colnames(Linje_20_2019)<-c("Month", "Date", "Passanger20")
+Linje_20_2019$Passanger20<-as.numeric(Linje_20_2019$Passanger20)
+
+Linje_20_2019<- Linje_20_2019 %>%
+  dplyr::group_by(Month,Date)%>%
+  tally(Passanger20) %>%
+  ungroup()
+
+colnames(Linje_20_2019)<-c("Month","Date","Passengers20")
+
+Linje_20_2019 <- Linje_20_2019 %>% mutate(Month = dplyr::recode(Month,
+                                                                "april"="April",
+                                                                "desember"="December",
+                                                                "januar"="January",
+                                                                "februar"="February",
+                                                                "mars"="March",
+                                                                "mai"="May",
+                                                                "juni"="June",
+                                                                "juli"="July",
+                                                                "august"="August",
+                                                                "september"="September",
+                                                                "oktober"="October",
+                                                                "november"="November"))
+
+Linje_20_2019$Month<-match(Linje_20_2019$Month, month.name)
+
+Linje_20_2019<- Linje_20_2019[-c(159,160,161,237,365),]
+
+##linje 33
+Linje_33_2019 <- read_excel("Linje 33 - 2019.xlsx")
+
+
+
+Linje_33_2019<- Linje_33_2019%>%
+  select("Brukte filtre:\r\nÅr er 2019\r\nLinje er 33", "...2", "...5")%>%
+  slice(-c(1:2))
+
+colnames(Linje_33_2019)<-c("Month", "Date", "Passanger33")
+Linje_33_2019$Passanger33<-as.numeric(Linje_33_2019$Passanger33)
+
+Linje_33_2019<- Linje_33_2019 %>%
+  dplyr::group_by(Month,Date)%>%
+  tally(Passanger33) %>%
+  ungroup()
+
+colnames(Linje_33_2019)<-c("Month","Date","Passengers33")
+
+Linje_33_2019 <- Linje_33_2019 %>% mutate(Month = dplyr::recode(Month,
+                                                                "april"="April",
+                                                                "desember"="December",
+                                                                "januar"="January",
+                                                                "februar"="February",
+                                                                "mars"="March",
+                                                                "mai"="May",
+                                                                "juni"="June",
+                                                                "juli"="July",
+                                                                "august"="August",
+                                                                "september"="September",
+                                                                "oktober"="October",
+                                                                "november"="November"))
+
+Linje_33_2019$Month<-match(Linje_33_2019$Month, month.name)
+Linje_33_2019<- Linje_33_2019[-c(159,160,161,237,365),]
+
+
+##linje 34
+Linje_34_2019 <- read_excel("Linje 34 - 2019.xlsx")
+
+
+Linje_34_2019<- Linje_34_2019%>%
+  select("Brukte filtre:\r\nÅr er 2019\r\nLinje er 34", "...2", "...5")%>%
+  slice(-c(1:2))
+
+colnames(Linje_34_2019)<-c("Month", "Date", "Passanger34")
+Linje_34_2019$Passanger34<-as.numeric(Linje_34_2019$Passanger34)
+
+Linje_34_2019<- Linje_34_2019 %>%
+  dplyr::group_by(Month,Date)%>%
+  tally(Passanger34) %>%
+  ungroup()
+
+colnames(Linje_34_2019)<-c("Month","Date","Passengers34")
+
+Linje_34_2019 <- Linje_34_2019 %>% mutate(Month = dplyr::recode(Month,
+                                                                "april"="April",
+                                                                "desember"="December",
+                                                                "januar"="January",
+                                                                "februar"="February",
+                                                                "mars"="March",
+                                                                "mai"="May",
+                                                                "juni"="June",
+                                                                "juli"="July",
+                                                                "august"="August",
+                                                                "september"="September",
+                                                                "oktober"="October",
+                                                                "november"="November"))
+
+Linje_34_2019$Month<-match(Linje_34_2019$Month, month.name)
+
+Linje_34_2019<- Linje_34_2019[-c(159,160,161,237,365),]
+
+##linje 24
+
+Linje_24_2019 <- read_excel("Linje 24 -2019.xlsx")
+
+names(Linje_24_2019)
+
+Linje_24_2019<- Linje_24_2019%>%
+  select("Brukte filtre:\nÅr er 2019\nLinje er 24", "...2", "...5")%>%
+  slice(-c(1:2))
+
+colnames(Linje_24_2019)<-c("Month", "Date", "Passanger24")
+Linje_24_2019$Passanger24<-as.numeric(Linje_24_2019$Passanger24)
+
+Linje_24_2019<- Linje_24_2019 %>%
+  dplyr::group_by(Month,Date)%>%
+  tally(Passanger24) %>%
+  ungroup()
+
+colnames(Linje_24_2019)<-c("Month","Date","Passengers24")
+
+Linje_24_2019 <- Linje_24_2019 %>% mutate(Month = dplyr::recode(Month,
+                                                                "april"="April",
+                                                                "desember"="December",
+                                                                "januar"="January",
+                                                                "februar"="February",
+                                                                "mars"="March",
+                                                                "mai"="May",
+                                                                "juni"="June",
+                                                                "juli"="July",
+                                                                "august"="August",
+                                                                "september"="September",
+                                                                "oktober"="October",
+                                                                "november"="November"))
+
+Linje_24_2019$Month<-match(Linje_24_2019$Month, month.name)
+
+Linje_24_2019<- Linje_24_2019[-c(159,160,161,237,365),]
+Linje_24_2019<-arrange(Linje_24_2019,as.numeric(Linje_24_2019$Month))
+
+
+#combind the data frames
+
+df<-bind_cols(trafikkdata, weatherdata, bicycledata, Linje_20_2019, Linje_24_2019, Linje_33_2019, Linje_34_2019)
+df<-df%>%
+  select("month...1","day...2", "Temp", "Passanger_cars","Volum","Rainfall/Snowfall","Passengers20","Passengers24","Passengers33","Passengers34")
+
+
+
+
+
+colnames(df)<-c("Month","Date","Temp", "Passanger_cars","Cyclists","Rainfall/Snowfall","Passengers20","Passengers24","Passengers33","Passengers34")
+
+
+
+df$Month<- as.factor(df$Month)
+df <- df %>% mutate(Month = dplyr::recode(Month,
+                                                                "4"="April",
+                                                                "12"="December",
+                                                                "1"="January",
+                                                                "2"="February",
+                                                                "3"="March",
+                                                                "5"="May",
+                                                                "6"="June",
+                                                                "7"="July",
+                                                                "8"="August",
+                                                                "9"="September",
+                                                                "10"="October",
+                                                                "11"="November"))
+
+
+
+
+```
+
+
+## Cars
+
+
+##### First we will have a look at the number of cars passing the Tromsø Bridge on the various dates in 2019. 
+##### We have used the passings on the Tromsø bridge because it is the same route many of the passengers of the busses 20/24 use to travel to the city. 
+##### In this first graph we have scaled the number of bus passengers by dividing the toatal by 170. 
+```{r,message = FALSE, warning= FALSE,echo=FALSE,}
+df$Passanger_cars<- df$Passanger_cars/170
+ 
+carplot<- ggplot(df,aes(Date))+
+  geom_line(aes(y=Temp), color="lightblue")+
+  geom_line(aes(y=`Rainfall/Snowfall`), color="Blue")+
+  geom_line(aes(y=Passanger_cars), color="black")+
+  facet_wrap(~Month)+
+  theme_minimal() +
+  xlab("Day of month")+
+  ylab(" ")
+
+ plotly::ggplotly(carplot, tooltip = c("Temp","Rainfall/Snowfall","Passanger_cars"))
+
+```
+
+<<<<<<< HEAD
+##### We have done a correlation test on the temperature and the number of passenger cars. The correlation shows how much the number of passenger cars changes based on the temperature. The scale goes from -1 (when temperature goes up with 1 degree, the number of passenger cars goes down with 1) to 1 (when temperature goes up with 1 degree, the number of passenger cars goes up by 1. Out from this we can see that R=0.034, which indicate that it is no correlation between temperature and car traveleres. 
+=======
+##### We have done a correlation test on the temperature and the number of cars. Out from this we can see that R=0.034 wich indicate that it is no correlation between temperature and car traveleres. P= 0.53 tells us that 
+>>>>>>> 27a6bb4f93f19726cd0ade42aee9f71d4f07c1a7
+##### In both correlation graphs the scale is the original numbers. The p-value is not relevant to our analysis and therfor we choose to ignore this value through our repport. 
+
+
+```{r,message = FALSE, warrning= FALSE,echo=FALSE}
+#bil trafikk
+  
+  df$Passanger_cars<- df$Passanger_cars*170
+  
+  
+  
+  ggplot(df, aes(x=Passanger_cars, y=Temp)) +
+    geom_point()+
+    geom_smooth(method=lm, se=FALSE)+
+    ggpubr::stat_cor(method = "pearson", label.x = 7000, label.y = 30)+
+    xlab("Number of cars")+
+    ylab("Temperature")+
+    theme_minimal()
+
+```
+
+
+##### In this graph you can see the correlation between precipitation and number of car travellers. Here we can see that the correlation is R = -0.096. Same as before, this indicate that there are no correlations between precipitation and cars. This small negative correlation tells us that if the precipitation reduces, the number of cars increase. The small value indicate that it in reality has no effect. 
+
+```{r,message = FALSE, warrning= FALSE,echo=FALSE}
+
+ggplot(df, aes(x=Passanger_cars, y=`Rainfall/Snowfall`)) +
+  geom_point()+
+  geom_smooth(method=lm, se=FALSE)+
+  ggpubr::stat_cor(method = "pearson", label.x = 7000, label.y = 30)+
+  xlab("Number of cars")+
+  ylab("Precipitation")+
+  theme_minimal()
+
+```
+
+
+## Bus
+
+##### This graph is showing the buses in Tromsø and the weather changes on the different dates in 2019. 
+##### This is the total number of passengers on the bus lines 20,24,33 and 34. Bus lines 20 and 24 covers Kroken and UiT/UNN and the city sentrum and 24 goes to the airport. 33 and 34 covers the south of the island and the city sentrum and UiT/UNN. All four of these buses cover the biggest workplaces in Tromsø.
+##### We have scaled the number of buses by dividing the total amount of passengers by 150. 
+
+```{r,message = FALSE, warrning= FALSE,echo=FALSE}
+
+totbus<- df%>%
+    select("Passengers20", "Passengers24", "Passengers33", "Passengers34", "Month","Date","Temp", "Rainfall/Snowfall")
+  
+  
+  totalbus<-rowSums(subset(totbus, select=Passengers20:Passengers34))
+  
+  tottbus<- cbind(totbus,totalbus)
+  
+  tottbus$totalbus<- tottbus$totalbus/150
+  
+  busplot<-ggplot(tottbus,aes(Date))+
+    geom_line(aes(y=Temp), color="lightblue")+
+    geom_line(aes(y=`Rainfall/Snowfall`), color="blue")+
+    geom_line(aes(y=totalbus), color="red")+
+    facet_wrap(~Month)+
+    theme_minimal() +
+    xlab("Day of month")+
+    ylab(" ")
+  
+   plotly::ggplotly(busplot, tooltip = c("Temp","Rainfall/Snowfall","totalbus"))
+
+
+```
+
+
+##### Here we have scaled the bus line back to its originale by multiplying with 150.  The correlation is negative, with R = -0.22. This indicate that there are small to none correlation between temperature and bus passengers. A negative correlation value in its self indicate that if the temprature drops there are more passangers on the bus. 
+
+
+```{r,message = FALSE, warrning= FALSE,echo=FALSE}
+
+  tottbus$totalbus<- tottbus$totalbus*150
+
+ggplot(df, aes(x=totalbus, y=Temp)) +
+  geom_point()+
+  geom_smooth(method=lm, se=FALSE)+
+  xlab("Bus passengers")+
+  ggpubr::stat_cor(method = "pearson", label.x = 9000, label.y = 30)+
+  ylab("Temperature")+
+  theme_minimal()
+```
+
+
+##### In the graph below we can see that there are small to none correlation between precipitation and bus passengers. 
+
+```{r,message = FALSE, warrning= FALSE,echo=FALSE}
+ggplot(df, aes(x=totalbus, y=`Rainfall/Snowfall`)) +
+  geom_point()+
+  geom_smooth(method=lm, se=FALSE)+
+  ggpubr::stat_cor(method = "pearson", label.x = 9000, label.y = 30)+
+  xlab("Bus passengers")+
+  ylab("Precipitation")+
+  theme_minimal()
+
+```
+
+
+
+
+
+
+## Bicycle
+
+##### Lastly we will see the effect temperature has on cyclists passing in Breivika. 
+##### The reason we only have the passings in Breivika is that we could not find more data the Statens vegvesens website.  
+##### We have scaled the number of passings by divide the total amount by 5. 
+
+```{r,message = FALSE, warrning= TRUE,echo=FALSE,error=FALSE}
+df$Cyclists<-df$Cyclists/5
+ 
+cyklplot<- ggplot(df, aes(Date))+
+  geom_line(aes(y=Temp), color="lightblue")+
+  geom_line(aes(y=`Rainfall/Snowfall`), color="blue")+
+  geom_line(aes(y=Cyclists), color="orange")+
+  facet_wrap(~Month)+
+  theme_minimal() +
+  xlab("Day of month")+
+  ylab(" ")
+
+  plotly::ggplotly(cyklplot, tooltip = c("Temp","Rainfall/Snowfall","Cyclists"))
+
+```
+
+
+
+##### In this correlation we can see that the correlation is 0.6. This indicate that there are some correlation between temperature and cyclists. This might indicate the long winter with low temperature in Tromsø has an effect on number cyclists. 
+##### Here we have scaled the number of cyclists back to its original number. 
+
+
+```{r,message = FALSE, warrning= TRUE,echo=FALSE,error=FALSE}
+df$Cyclists<-df$Cyclists*5
+
+
+ggplot(df, aes(x=df$Cyclists, y=df$Temp)) +
+  geom_point()+
+  geom_smooth(method=lm, se=FALSE)+
+  ggpubr::stat_cor(method = "pearson", label.x = 150, label.y = 30)+
+  xlab("Cyclists")+
+  ylab("Temperature")+
+  theme_minimal()
+ 
+```
+
+
+#### From this test we can se that there are a negative correlatin, wich indicate that if the amount of precipitation reduces, the number of cyclists increase. 
+
+
+```{r,message = FALSE, warrning= TRUE,echo=FALSE,error=FALSE}
+ggplot(df, aes(x=Cyclists, y=`Rainfall/Snowfall`)) +
+  geom_point()+
+  geom_smooth(method=lm, se=FALSE)+
+  ggpubr::stat_cor(method = "pearson", label.x = 150, label.y = 30)+
+  ylab("Precipitation")+
+  xlab("Cyclists")+
+  theme_minimal()
+```
+
+## Results
+
+##### We have now gathered all the data in one graph to easier have an overlook at the changes in car driver, bus passengers, cyclists and the weather.  
+
+```{r,message = FALSE, warrning= TRUE,echo=FALSE,error=FALSE}
+wplot<-ggplot(df, aes(x=Date))+
+  geom_line(aes(y=Temp), color="lightblue")+
+  geom_line(aes(y=`Rainfall/Snowfall`), color="blue")+
+  geom_line(aes(y=Passanger_cars), color="black")+
+  geom_line(aes(y=Cyclists), color="orange")+
+  geom_line(aes(y=Linje_20_2019$Passengers20), color="red")+
+  geom_line(aes(y=Linje_24_2019$Passengers24), color="white")+
+  geom_line(aes(y=Linje_33_2019$Passengers33), color="pink")+
+  geom_line(aes(y=Linje_34_2019$Passengers34), color="purple")+
+  facet_wrap(~Month)+
+  theme_minimal() +
+  xlab("Day of month")+
+  ylab(" ")
+  
+
+  plotly::ggplotly(wplot, tooltip = c("Temp","Rainfall/Snowfall","Passanger_cars","Cyclists","Linje_20_2019$Passengers20","Linje_24_2019$Passengers24","Linje_33_2019$Passengers33","Linje_34_2019$Passengers34"))
+
+
+  
+  
+  
+```
+
+
+
+
+##### To conclude we can now say that there are small to no change in the transportation choice based on the weather forcast. The biggest difference is number of people cycling in winter compared to summer. However, this should not come as a surprise due to the snow and ice in the winter. There are no incentives to costomize the number of buses after the weather in Tromsø. 
+
+
+###### Sources:
+###### Bus info from Lasse Lauritzen at Troms og Finnmark fylkeskommune
+###### weather: https://www.yr.no/nb/historikk/tabell/1-305409/Norge/Troms%20og%20Finnmark/Troms%C3%B8/Troms%C3%B8?q=2019
+###### Bicycle and car passing :https://www.vegvesen.no/trafikkdata/start/eksport?datatype=HOUR&fbclid=IwAR2tMQZO-ui-CipzcL48vbOiXmhJeJM41iyphO48NHcROPSKOjTZpKA3pE4&from=2020-12-14&lat=69.66234030691925&lon=18.973682177041397&to=2020-12-15&trafikanttype=vehicle&trpids=95912B1818982&zoom=12
+
+</center>
+
+
