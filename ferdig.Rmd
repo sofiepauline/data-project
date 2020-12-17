@@ -54,7 +54,12 @@ library(dplyr)
 
 ##### Info
 ###### To get more info on the graphs you can select different options at the top right corner of the graphs. Here you can compare data on hover, or more exact read the x and y values. 
+<<<<<<< HEAD
 ###### In some of the graphs there are some dips. The dips are on sundays and comes because people travel less by bus/bike/car on this day of the week.
+=======
+
+
+>>>>>>> 32922a09331bea5112898ea8c1f772f583b1fd70
 
 
 ```{r, include=FALSE, error=FALSE}
@@ -316,10 +321,14 @@ carplot<- ggplot(df,aes(Date))+
 ```
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 ##### We have done a correlation test on the temperature and the number of passenger cars. The correlation shows how much the number of passenger cars changes based on the temperature. The scale goes from -1 (when temperature goes up with 1 degree, the number of passenger cars goes down with 1) to 1 (when temperature goes up with 1 degree, the number of passenger cars goes up by 1. Out from this we can see that R=0.034, which indicate that it is no correlation between temperature and car traveleres. 
 =======
 ##### We have done a correlation test on the temperature and the number of cars. Out from this we can see that R=0.034 wich indicate that it is no correlation between temperature and car traveleres. P= 0.53 tells us that 
 >>>>>>> 27a6bb4f93f19726cd0ade42aee9f71d4f07c1a7
+=======
+##### We have done a correlation test on the temperature and the number of cars. Out from this we can see that R=0.034 wich indicate that it is no correlation between temperature and car traveleres. P= 0.53 tells us that 
+>>>>>>> 32922a09331bea5112898ea8c1f772f583b1fd70
 ##### In both correlation graphs the scale is the original numbers. The p-value is not relevant to our analysis and therfor we choose to ignore this value through our repport. 
 
 
